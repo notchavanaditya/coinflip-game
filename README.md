@@ -16,6 +16,18 @@ A web-based casino game with a sophisticated betting strategy implementation. Th
 - Detailed game history with win/loss tracking
 - Responsive design for all devices
 
+## Screenshots
+
+### Game Interface
+![Game Interface](screenshots/game-ui.png)
+
+The main interface features real-time balance tracking, betting controls, and game history.
+
+### Balance Graph
+![Balance Graph](screenshots/graph.png)
+
+The balance graph shows your betting history and current balance trend over time.
+
 ### Hybrid Apex Strategy
 - Dual-engine betting system:
   - Growth Engine: Uses tranches to manage risk
