@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Flip Casino</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* (CSS styles remain the same, no changes needed here) */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #1a1a1a; color: #e0e0e0; display: flex; justify-content: center; align-items: flex-start; padding: 50px 0; margin: 0; }
+        .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; width: 100%; max-width: 1200px; }
+        .casino { background-color: #2c2c2c; padding: 30px 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); text-align: center; width: 90%; max-width: 450px; flex-shrink: 0; }
+        h1, h2 { color: #ffffff; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .balance { font-size: 2.5em; color: #4CAF50; margin: 20px 0; }
+        .controls label { display: block; margin-bottom: 10px; font-size: 1.1em; }
+        .controls input { width: 80%; padding: 10px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #555; background-color: #333; color: #fff; font-size: 1.2em; text-align: center; }
+        .btn-group button { padding: 15px 30px; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer; margin: 0 10px; transition: background-color 0.3s; }
+        .btn-heads { background-color: #007BFF; color: white; }
+        .btn-tails { background-color: #ffc107; color: black; }
+        .btn-reset { background-color: #dc3545; color: white; margin-top: 20px; }
+        .result { margin-top: 25px; min-height: 50px; font-size: 1.2em; }
+        .history-container { margin-top: 30px; text-align: left; width: 100%;}
+        #history-list { list-style: none; padding: 0; height: 260px; overflow-y: auto; border: 1px solid #444; border-radius: 5px; }
+        #history-list li { background-color: #333; padding: 10px; margin-bottom: 1px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
+        .win { color: #4CAF50; font-weight: bold; }
+        .loss { color: #f44336; font-weight: bold; }
+        .chart-container { background-color: #2c2c2c; padding: 20px; border-radius: 12px; width: 90%; max-width: 600px; flex-shrink: 0;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="casino">
+        <h1>Coin Flip Casino</h1>
+        <p>Your Balance:</p>
+        <div class="balance" id="balance-display">${{ "%.2f"|format(current_balance) }}</div>
+        <div class="controls">
+            <label for="bet-amount">Bet Amount:</label>
+            <input type="number" id="bet-amount" value="1.00" step="0.01">
+            <div class="btn-group">
+                <button class="btn-heads" onclick="playGame('heads')">Bet on Heads</button>
+                <button class="btn-tails" onclick="playGame('tails')">Bet on Tails</button>
+            </div>
+        </div>
+        <div class="result" id="result-area">Place your bet to start!</div>
+        <button class="btn-reset" onclick="resetGame()">Reset Game</button>
+        <div class="history-container">
+            <h2>Recent Bets (Last 10)</h2>
+            <ol id="history-list"></ol>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Full Balance History</h2>
+        <canvas id="balanceChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // --- Global State and Element References ---
+    const balanceDisplay = document.getElementById('balance-display');
+    const betAmountInput = document.getElementById('bet-amount');
+    const resultArea = document.getElementById('result-area');
+    const historyList = document.getElementById('history-list');
+    const chartCanvas = document.getElementById('balanceChart');
+    let balanceChart;
+    let lastKnownHistoryLength = 0; // ** NEW: Track the number of bets we've seen
+
+    // --- Core UI Update Functions ---
+    function updateChart(fullHistory) { /* ... (no changes) ... */ }
+    function updateHistoryList(fullHistory) { /* ... (no changes) ... */ }
+
+    // --- Polling Function for Live Updates ---
+    // ** NEW: This function runs every second to check for changes **
+    async function pollForUpdates() {
+        try {
+            const response = await fetch('/status'); // Quietly check the status
+            const data = await response.json();
+
+            // Check if the history has grown (i.e., the script made a bet)
+            if (data.history.length !== lastKnownHistoryLength) {
+                console.log('New data detected! Updating UI.');
+                lastKnownHistoryLength = data.history.length; // Update our tracker
+
+                // Update all UI components with the new data
+                balanceDisplay.textContent = `$${data.balance.toFixed(2)}`;
+                updateHistoryList(data.history);
+                updateChart(data.history);
+
+                // We don't update the "result" area, as that's for manual clicks
+            }
+        } catch (error) {
+            console.error("Polling error:", error);
+        }
+    }
+
+    // --- Main Game and UI Logic ---
+    async function playGame(choice) { /* ... (no changes) ... */ }
+    async function resetGame() { /* ... (no changes) ... */ }
+    
+    function updateUI(data) {
+        if (data.error) {
+            resultArea.innerHTML = `<span class="loss">Error: ${data.error}</span>`;
+            if (data.your_balance !== undefined) {
+                balanceDisplay.textContent = `$${data.your_balance.toFixed(2)}`;
+            }
+        } else {
+            // This part now primarily updates the UI after a MANUAL click
+            balanceDisplay.textContent = `$${data.new_balance.toFixed(2)}`;
+            const resultClass = data.win ? 'win' : 'loss';
+            resultArea.innerHTML = `Coin was <strong>${data.outcome}</strong>. <span class="${resultClass}">${data.message}</span>`;
+            lastKnownHistoryLength = data.history.length; // Sync tracker
+            updateHistoryList(data.history);
+            updateChart(data.history);
+        }
+    }
+    
+    // --- Page Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeChart();
+        // ** NEW: Start polling for updates every 1000ms (1 second) **
+        setInterval(pollForUpdates, 1000);
+    });
+
+    // (The rest of the functions are pasted below without changes for completeness)
+    function initializeChart() {
+        const initialHistory = {{ history|tojson }};
+        lastKnownHistoryLength = initialHistory.length;
+        const ctx = chartCanvas.getContext('2d');
+        balanceChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Balance', data: [], borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.2)', fill: true, tension: 0.1 }] },
+            options: {
+                animation: { duration: 0 }, // Disable animation for instant updates
+                responsive: true,
+                plugins: { legend: { display: false }},
+                scales: {
+                    x: { ticks: { color: '#e0e0e0', maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 20 }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                    y: { ticks: { color: '#e0e0e0', callback: value => '$' + value }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                }
+            }
+        });
+        updateChart(initialHistory);
+    }
+    
+    function updateChart(fullHistory) {
+        const chronologicalHistory = [...fullHistory].reverse();
+        const labels = ['Start'];
+        const dataPoints = [100.00];
+        chronologicalHistory.forEach((entry, index) => {
+            labels.push(`${index + 1}`);
+            dataPoints.push(entry.balance_after);
+        });
+        balanceChart.data.labels = labels;
+        balanceChart.data.datasets[0].data = dataPoints;
+        balanceChart.update();
+    }
+    
+    async function playGame(choice) {
+        const betAmount = parseFloat(betAmountInput.value);
+        resultArea.innerHTML = `Flipping...`;
+        try {
+            const response = await fetch('/flip', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ bet_amount: betAmount, choice: choice }),
+            });
+            const data = await response.json();
+            updateUI(data);
+        } catch(e) {
+            resultArea.innerHTML = `<span class="loss">Error: Connection to server failed.</span>`;
+        }
+    }
+
+    async function resetGame() {
+        resultArea.innerHTML = `Resetting...`;
+        const response = await fetch('/reset', { method: 'POST' });
+        const data = await response.json();
+        updateUI(data);
+        resultArea.innerHTML = "Game has been reset. Place your bet!";
+    }
+
+    function updateHistoryList(fullHistory) {
+        historyList.innerHTML = '';
+        const recentHistory = fullHistory.slice(0, 10);
+        recentHistory.forEach(entry => {
+            const li = document.createElement('li');
+            const resultClass = entry.result.includes('Win') ? 'win' : 'loss';
+            li.innerHTML = `<span>Chose: ${entry.choice} | Landed: ${entry.outcome}</span> <span class="${resultClass}">${entry.result}</span>`;
+            historyList.appendChild(li);
+        });
+    }
+</script>
+
+</body>
+</html>
